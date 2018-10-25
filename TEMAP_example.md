@@ -2156,7 +2156,7 @@ Change to 'rresults\_TE\_2\_Boot\_CI' for TE-2 model or change to 'results\_TE\_
 if (is.null(simulation_results_list$results_TE_2_Boot_CI)==0) {
   
   #pdf("TE-2 Bootstrapped Density of a_00.pdf")
-  plot(( simulation_results_list$results_TE_2_Boot_CI[[1]]$boot.parameters[,c("a_00")]),xlim = c(0, 1), main=paste0("Bootstrapped Density of a_00, TE - 2, Fit method: ", fit_method, ", Case: ",case))
+  plot(density( simulation_results_list$results_TE_2_Boot_CI[[1]]$boot.parameters[,c("a_00")]),xlim = c(0, 1), main=paste0("Bootstrapped Density of a_00, TE - 2, Fit method: ", fit_method, ", Case: ",case))
   # dev.off()
   #pdf("TE-2 Bootstrapped Density of a_01.pdf")
   plot(density(simulation_results_list$results_TE_2_Boot_CI[[1]]$boot.parameters[,c("a_01")]),xlim = c(0, 1), main=paste0("Bootstrapped Density of a_01, TE - 2, Fit method: ", fit_method, ", Case: ",case))
@@ -2239,8 +2239,8 @@ You can easily revise it to save other information and to make other graphs
 
 See documentation section.
 
-**For profesoor Lee**
-=====================
+**Plotting Confidence Intervals**
+=================================
 
 ``` r
 fit_method <- simulation_results_list$fit_method
