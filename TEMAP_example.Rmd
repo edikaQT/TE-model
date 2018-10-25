@@ -1,0 +1,461 @@
+---
+title: "TE_example"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+# **Example set-up: The user can revise this section**
+## **This section illustrates use of the functions**
+Additional documentation of the main functions at the top of the **TEMAP2_functions.R**
+
+
+```{r}
+
+library(readxl)
+library(boot)
+library(scales)
+library(data.table)
+library(ggplot2)
+```
+
+
+
+##    **Read in the data**
+```{r}
+
+setwd("C:/Users/edika/Desktop/key backup/Michael") #working directory
+source("TEMAP2_only_functions.R")
+
+data_file<-"Example.xlsx"            # Input data are in a xlsx file
+
+read_excel(data_file, sheet = "Inputs")[, c("Inputs", "Specifications")]
+read_excel(data_file, sheet = "Participant responses")
+
+response_patterns <-read_excel(data_file, sheet = "Participant responses")
+number_cases <- nrow(response_patterns)
+
+```
+
+```{r error=TRUE}
+
+simulation_results_list <-TE_READ_DATA(data_file)
+names(simulation_results_list)
+(simulation_results_list[[3]])
+
+output_file<- paste(simulation_results_list$Output_file,".txt", sep = "")
+(fit_method <- simulation_results_list$fit_method)
+
+#   It may take 20 min. per case to simulate TE model and analyze 10,000 samples via MC
+
+
+#   Output is directed to the file designated below
+
+#sink(output_file,append=TRUE)
+label_TE_4_errors=c("OUTPUT >>> True and Error Model Results - 4 error terms >>>")
+label_TE_2_errors=c("OUTPUT >>> True and Error Model Results - 2 error terms >>>")
+label_TE_1_errors=c("OUTPUT >>> True and Error Model Results - 1 error term >>>")
+label_Indep=c("OUTPUT >>> Independence Model Results")
+
+print(label_TE_4_errors)
+print(simulation_results_list$results_TE_4_errors)
+print(label_TE_2_errors)
+print(simulation_results_list$results_TE_2_errors)
+print(label_TE_1_errors)
+print(simulation_results_list$results_TE_1_errors)
+print(label_Indep)
+print(simulation_results_list$results_Independence)
+
+print("OUTPUT >>> First few samples parameters for Case 1, Model TE-4 >>>") 
+print(head(simulation_results_list$results_TE_4_MC[[1]]$parameters_Re.fitted.MC))
+print(head(simulation_results_list$results_TE_4_MC[[1]]$errors_Re.fitted.MC))
+
+print("OUTPUT >>> First few Monte Carlo Re.fitted Chi-squared (or G2) values for Case 1, Model TE-4 >>>") 
+print(head(simulation_results_list$results_TE_4_MC[[1]]$chisq_Re.fitted.MC))
+
+print("OUTPUT >>> Chi-squared (or G2) difference test for Case 1, for selected models (available when the Monte Carlo test was not selected) >>>") 
+print(simulation_results_list$results_Chi2_diff_table[[1]]$TE_1_Chi2_diff_test)
+print(simulation_results_list$results_Chi2_diff_table[[1]]$TE_2_Chi2_diff_test)
+print(simulation_results_list$results_Chi2_diff_table[[1]]$TE_4_Chi2_diff_test)
+
+print("OUTPUT >>> Monte Carlo Chi-squared (or G2) difference test for Case 1, for selected models >>>") 
+print(simulation_results_list$results_Chi2_diff_MC[[1]]$TE_1_Chi2_diff_test)
+print(simulation_results_list$results_Chi2_diff_MC[[1]]$TE_2_Chi2_diff_test)
+print(simulation_results_list$results_Chi2_diff_MC[[1]]$TE_4_Chi2_diff_test)
+
+#sink(file = NULL)
+
+```
+
+##  **Draw histogram of the fit for the TE-4 Model**
+
+##   Draw histogram for **Case #1** TE-4 Model **Refit** to each sample
+Change to 'results_TE_2_MC' for TE-2 model or change to 'results_TE_1_MC' for TE-1 model.
+```{r}
+
+case=1
+if (is.null(simulation_results_list$results_TE_4_MC)==0) {
+  #pdf("MonteCarlo_TE_4_Refit_Case_1.pdf")
+  MonteCarlo_statistic_histogram <- hist(simulation_results_list$results_TE_4_MC[[case]]$chisq_Re.fitted.MC,col=scales::alpha('skyblue',.5),
+                                         breaks=50,xlim = c(0, simulation_results_list$results_TE_4_MC[[case]]$original.chisq[[1]]+10),border=F,
+                                         main=paste0("Monte Carlo TE - 4 Model (Re-Fit) - Case ", case),
+                                         xlab=paste0(fit_method," Re-Fit in each Sample")) 
+  abline(v=simulation_results_list$results_TE_4_MC[[case]]$original.chisq,col="red")
+  #dev.off()
+
+}
+```
+
+## Draw histogram for **Case #1** TE Model **Conservative** Monte Carlo
+  
+```{r}
+
+if (is.null(simulation_results_list$results_TE_4_MC)==0) {
+
+  
+  # pdf("MonteCarlo_TE_4_Conservative_Case_1.pdf")
+  MonteCarlo_conservative_statistic_histogram <- hist(simulation_results_list$results_TE_4_MC[[case]]$chisq_Conservative.MC,col=scales::alpha('skyblue',.5),
+                                                      breaks=50,
+                                                      xlim = c(0, simulation_results_list$results_TE_4_MC[[case]]$original.chisq[[1]] +10),
+                                                      border=F,
+                                                      main=paste0("Monte Carlo TE - 4 Model (Conservative) - Case ", case),
+                                                      xlab=paste0(fit_method," Conservative"))
+  abline(v=simulation_results_list$results_TE_4_MC[[case]]$original.chisq,col="red")
+  #dev.off()
+}
+
+```
+
+##  **Draw histogram of the fit for the TE-2 Model**
+
+##  Draw Histogram for **Case #1** TE-2 Model **Refit** to each sample
+Change to 'results_TE_2_MC' for TE-2 model or change to 'results_TE_1_MC' for TE-1 model.
+```{r}
+
+if (is.null(simulation_results_list$results_TE_2_MC)==0) {
+  #pdf("MonteCarlo_TE_2_Refit_Case_1.pdf")
+  MonteCarlo_statistic_histogram <- hist(simulation_results_list$results_TE_2_MC[[case]]$chisq_Re.fitted.MC,col=scales::alpha('skyblue',.5),
+                                         breaks=50,
+                                         xlim = c(0, simulation_results_list$results_TE_2_MC[[case]]$original.chisq[[1]]+10),
+                                         border=F,
+                                         main=paste0("Monte Carlo TE - 2 Model (Re-Fit) - Case ", case),
+                                         xlab=paste0(fit_method," Re-Fit in each Sample")) 
+  abline(v=simulation_results_list$results_TE_2_MC[[case]]$original.chisq,col="red")
+  #dev.off()
+}
+```
+## Draw Histogram for **Case #1** TE Model **Conservative** Monte Carlo
+  
+```{r}
+  if (is.null(simulation_results_list$results_TE_2_MC)==0) {
+
+  #pdf("MonteCarlo_TE_2_Conservative_Case_1.pdf")
+  MonteCarlo_conservative_statistic_histogram <- hist(simulation_results_list$results_TE_2_MC[[case]]$chisq_Conservative.MC,col=scales::alpha('skyblue',.5),
+                                                      breaks=50,
+                                                      xlim = c(0, simulation_results_list$results_TE_2_MC[[case]]$original.chisq[[1]]+10),
+                                                      border=F,
+                                                      main=paste0("Monte Carlo TE - 2 Model (Conservative) - Case ", case),
+                                                      xlab=paste0(fit_method," Conservative")) 
+  abline(v=simulation_results_list$results_TE_2_MC[[case]]$original.chisq,col="red")
+  #dev.off()
+}
+
+```
+
+
+##  **Save bootstrapped density GRAPHS for the TE-4 Model**
+
+The next section shows how to graph the results of the bootstrapping distributions for Case #1.
+
+Here smoothed density distributions are drawn.  One could use histograms instead.
+
+Note that parameters fixed by the user do not show density distributions.
+
+Change to 'rresults_TE_2_Boot_CI' for TE-2 model or change to 'results_TE_1_Boot_CI' for TE-1 model.
+
+```{r}
+
+if (is.null(simulation_results_list$results_TE_4_Boot_CI)==0) {
+  #pdf("Bootstrapped Density of a_00.pdf")
+  plot(density( simulation_results_list$results_TE_4_Boot_CI[[case]]$boot.parameters[,c("a_00")]),xlim = c(0, 1), main=paste0("Bootstrapped Density of a_00, TE - 4, Fit method: ", fit_method, ", Case: ",case))
+  #dev.off()
+  #pdf("Bootstrapped Density of a_01.pdf")
+  plot(density(simulation_results_list$results_TE_4_Boot_CI[[case]]$boot.parameters[,c("a_01")]),xlim = c(0, 1), main=paste0("Bootstrapped Density of a_01, TE - 4, Fit method: ", fit_method, ", Case: ",case))                                               
+  #dev.off()
+  #pdf("Bootstrapped Density of a_10.pdf")
+  plot(density(simulation_results_list$results_TE_4_Boot_CI[[case]]$boot.parameters[,c("a_10")]),xlim = c(0, 1), main=paste0("Bootstrapped Density of a_10, TE - 4, Fit method: ", fit_method, ", Case: ",case))
+  #dev.off()
+  #pdf("Bootstrapped Density of a_11.pdf")
+  plot(density(simulation_results_list$results_TE_4_Boot_CI[[case]]$boot.parameters[,c("a_11")]),xlim = c(0, 1), main=paste0("Bootstrapped Density of a_11, TE - 4, Fit method: ", fit_method, ", Case: ",case))
+  #dev.off()
+  #pdf("Bootstrapped Density of error_R1.pdf")
+  plot(density(simulation_results_list$results_TE_4_Boot_CI[[case]]$boot.errors[,c("error_R1")]),xlim = c(0, 1), main=paste0("Bootstrapped Density of error_R1, TE - 4, Fit method: ", fit_method, ", Case: ",case))
+  #dev.off()
+  #pdf("Bootstrapped Density of error_R2.pdf")
+  plot(density(simulation_results_list$results_TE_4_Boot_CI[[case]]$boot.errors[,c("error_R2")]),xlim = c(0, 1), main=paste0("Bootstrapped Density of error_R2, TE - 4, Fit method: ", fit_method, ", Case: ",case))
+  #dev.off()
+  #pdf("Bootstrapped Density of error_S1.pdf")
+  plot(density(simulation_results_list$results_TE_4_Boot_CI[[case]]$boot.errors[,c("error_S1")]),xlim = c(0, 1), main=paste0("Bootstrapped Density of error_S1, TE - 4, Fit method: ", fit_method, ", Case: ",case))
+  #dev.off()
+  #pdf("Bootstrapped Density of error_S2.pdf")
+  plot(density(simulation_results_list$results_TE_4_Boot_CI[[case]]$boot.errors[,c("error_S2")]),xlim = c(0, 1), main=paste0("Bootstrapped Density of error_S2, TE - 4, Fit method: ", fit_method, ", Case: ",case))
+  #dev.off()
+}
+
+```
+
+
+## **Save bootstrapped density graphs for the TE-2 Model**
+
+The next section shows how to graph the results of the bootstrapping distributions for Case #1
+
+Here smoothed density distributions are drawn.  One could use histograms instead.
+
+Note that parameters fixed by the user do not show density distributions 
+
+Change to 'rresults_TE_2_Boot_CI' for TE-2 model or change to 'results_TE_1_Boot_CI' for TE-1 model.
+
+```{r}
+#dev.set(dev.next())
+#dev.cur()
+
+if (is.null(simulation_results_list$results_TE_2_Boot_CI)==0) {
+  
+  #pdf("TE-2 Bootstrapped Density of a_00.pdf")
+  plot(( simulation_results_list$results_TE_2_Boot_CI[[1]]$boot.parameters[,c("a_00")]),xlim = c(0, 1), main=paste0("Bootstrapped Density of a_00, TE - 2, Fit method: ", fit_method, ", Case: ",case))
+  # dev.off()
+  #pdf("TE-2 Bootstrapped Density of a_01.pdf")
+  plot(density(simulation_results_list$results_TE_2_Boot_CI[[1]]$boot.parameters[,c("a_01")]),xlim = c(0, 1), main=paste0("Bootstrapped Density of a_01, TE - 2, Fit method: ", fit_method, ", Case: ",case))
+  #dev.off()
+  #pdf("TE-2 Bootstrapped Density of a_10.pdf")
+  plot(density(simulation_results_list$results_TE_2_Boot_CI[[1]]$boot.parameters[,c("a_10")]),xlim = c(0, 1), main=paste0("Bootstrapped Density of a_10, TE - 2, Fit method: ", fit_method, ", Case: ",case))
+  #dev.off()
+  #pdf("TE-2 Bootstrapped Density of a_11.pdf")
+  plot(density(simulation_results_list$results_TE_2_Boot_CI[[1]]$boot.parameters[,c("a_11")]),xlim = c(0, 1), main=paste0("Bootstrapped Density of a_11, TE - 2, Fit method: ", fit_method, ", Case: ",case))
+  #dev.off()
+  #pdf("TE-2 Bootstrapped Density of error_1.pdf")
+  plot(density(simulation_results_list$results_TE_2_Boot_CI[[1]]$boot.errors[,c("error_1")]),xlim = c(0, 1), main=paste0("Bootstrapped Density of error_1, TE - 2, Fit method: ", fit_method, ", Case: ",case))
+  #dev.off()
+  #pdf("TE-2 Bootstrapped Density of error_2.pdf")
+  plot(density(simulation_results_list$results_TE_2_Boot_CI[[1]]$boot.errors[,c("error_2")]),xlim = c(0, 1), main=paste0("Bootstrapped Density of error_2, TE - 2, Fit method: ", fit_method, ", Case: ",case))
+  #dev.off()
+  
+}
+
+```
+
+## **Draw histograms of the Chi-squared difference test for the restricted and unrestricted models**
+
+## Draw Histogram for **Case #1** of the Chi-squared difference values for the TE-4 Model
+Change participant in '[[case]]'. 
+```{r}
+
+TE_4_Re_fit <- simulation_results_list$results_Chi2_diff_MC[[case]]$TE_4_Chi2_diff_test$Chi2_diff_Re.fitted.MC$MC_Re.fitted_chi2_diff_results[,3]
+TE_2_Re_fit <- simulation_results_list$results_Chi2_diff_MC[[case]]$TE_2_Chi2_diff_test$Chi2_diff_Re.fitted.MC$MC_Re.fitted_chi2_diff_results[,3]
+TE_1_Re_fit <- simulation_results_list$results_Chi2_diff_MC[[case]]$TE_1_Chi2_diff_test$Chi2_diff_Re.fitted.MC$MC_Re.fitted_chi2_diff_results[,3]
+
+TE_4_Standard <- simulation_results_list$results_Chi2_diff_MC[[case]]$TE_4_Chi2_diff_test$Chi2_diff_standard[,3]
+TE_2_Standard <- simulation_results_list$results_Chi2_diff_MC[[case]]$TE_2_Chi2_diff_test$Chi2_diff_standard[,3]
+TE_1_Standard <- simulation_results_list$results_Chi2_diff_MC[[case]]$TE_1_Chi2_diff_test$Chi2_diff_standard[,3]
+```
+
+
+Adjust the number of breaks for a better display
+
+Negative differences in Chi2 could occur in rare occasions, only when the optimization algorithm reaches local minima points.
+
+```{r}
+
+if (is.null(TE_4_Re_fit)==0) {
+  #pdf(paste0("MonteCarlo_",fit_method,"_difference_test_TE_4_Refit_Case_",case, ".pdf"))
+  MonteCarlo_histogram <- hist(TE_4_Re_fit,col=scales::alpha('skyblue',.5),breaks=30,
+                               border=F,
+                               main=paste0("Monte Carlo ",fit_method," Difference, TE - 4 Model (Re-Fit)"),
+                               xlim = c(-1, TE_4_Standard+4),
+                               xlab=paste0(fit_method," Difference (Re-Fit Monte Carlo)"))
+  abline(v=TE_4_Standard,col="red")
+  #dev.off()
+}  
+
+if (is.null(TE_2_Re_fit)==0) {
+  #pdf(paste0("MonteCarlo_",fit_method,"_difference_test_TE_2_Refit_Case_",case, ".pdf"))
+  MonteCarlo_histogram <- hist(TE_2_Re_fit,col=scales::alpha('skyblue',.5),breaks=30,
+                               border=F,
+                               main=paste0("Monte Carlo ",fit_method," Difference, TE - 2 Model (Re-Fit)"),
+                               xlim = c(-1, TE_2_Standard+4),
+                               xlab=paste0(fit_method," Difference (Re-Fit Monte Carlo)"))
+  abline(v=TE_2_Standard,col="red")
+  #dev.off()
+}  
+
+```
+
+
+This example is set up to save only selected results to illustrate the program
+
+For example, it saves only graphs for the first case.
+
+You can easily revise it to save other information and to make other graphs  
+
+See documentation section.
+
+# **For profesoor Lee**
+
+```{r}
+
+fit_method <- simulation_results_list$fit_method
+if (is.null(simulation_results_list$results_TE_4_Boot_CI)==0) {
+  
+  file_name <- paste0("Boot sample estimates, TE4, fit method ", fit_method,
+                      " restrictions a_00=",simulation_results_list$user_restrictions[1],  
+                      " ,a_01=",simulation_results_list$user_restrictions[2],
+                      " ,a_10=",simulation_results_list$user_restrictions[3],
+                      " ,a_11=",simulation_results_list$user_restrictions[4],
+                      ".csv")
+  
+  boot_estimates_all <- NULL
+  for (i in 1:length(simulation_results_list$results_TE_4_Boot_CI)) {
+    boot_estimates<- as.data.table(simulation_results_list$results_TE_4_Boot_CI[[i]]$boot.parameters)
+    boot_estimates <- cbind(boot_estimates,simulation_results_list$results_TE_4_Boot_CI[[i]]$boot.errors)
+    
+    boot_estimates[,case:=i]
+    
+    boot_estimates_all <- rbind(boot_estimates_all, boot_estimates)
+  }
+  
+  write.csv(boot_estimates_all, file= file_name)
+  
+  
+}
+
+
+if (is.null(simulation_results_list$results_TE_2_Boot_CI)==0) {
+  
+  
+  file_name <- paste0("Boot sample estimates, TE2, fit method ", fit_method, " restrictions a_00=",simulation_results_list$user_restrictions[1],  
+                      " ,a_01=",simulation_results_list$user_restrictions[2],
+                      " ,a_10=",simulation_results_list$user_restrictions[3],
+                      " ,a_11=",simulation_results_list$user_restrictions[4],
+                      ".csv")
+  
+  boot_estimates_all <- NULL
+  for (i in 1:length(simulation_results_list$results_TE_2_Boot_CI)) {
+    boot_estimates<- as.data.table(simulation_results_list$results_TE_2_Boot_CI[[i]]$boot.parameters)
+    boot_estimates <- cbind(boot_estimates,simulation_results_list$results_TE_2_Boot_CI[[i]]$boot.errors)
+    
+    boot_estimates[,case:=i]
+    
+    boot_estimates_all <- rbind(boot_estimates_all, boot_estimates)
+  }
+  
+  write.csv(boot_estimates_all, file= file_name)
+  
+}
+
+
+
+if (is.null(simulation_results_list$results_TE_1_Boot_CI)==0) {
+  
+  
+  file_name <- paste0("Boot sample estimates, TE1, fit method ", fit_method, " restrictions a_00=",simulation_results_list$user_restrictions[1],  
+                      " ,a_01=",simulation_results_list$user_restrictions[2],
+                      " ,a_10=",simulation_results_list$user_restrictions[3],
+                      " ,a_11=",simulation_results_list$user_restrictions[4],
+                      ".csv")
+  
+  boot_estimates_all <- NULL
+  for (i in 1:length(simulation_results_list$results_TE_1_Boot_CI)) {
+    boot_estimates<- as.data.table(simulation_results_list$results_TE_1_Boot_CI[[i]]$boot.parameters)
+    boot_estimates <- cbind(boot_estimates,simulation_results_list$results_TE_1_Boot_CI[[i]]$boot.errors)
+    
+    boot_estimates[,case:=i]
+    
+    boot_estimates_all <- rbind(boot_estimates_all, boot_estimates)
+  }
+  
+  write.csv(boot_estimates_all, file= file_name)
+  
+}
+
+```
+
+# Plot of confidence intervals
+
+Confidence intervals are ommited for the parameters constrained to be 0 in the input file
+
+```{r}
+
+case=1 #select case for graph
+
+CI_plot_TE1 <-NULL
+CI_plot_TE2 <-NULL
+CI_plot_TE4 <-NULL
+
+if (is.null(simulation_results_list$results_TE_1_Boot_CI)==0) {
+  
+  CI_plot_TE1<-(simulation_results_list$results_TE_1_Boot_CI[[case]]$confidence.intervals)
+  CI_plot_TE1 <-cbind(Parameters=rownames(CI_plot_TE1), CI_plot_TE1)
+  CI_plot_TE1 <- as.data.table(CI_plot_TE1)
+  CI_plot_TE1[,Estimates:=as.numeric(Estimates)]
+  CI_plot_TE1[,`Lower bound`:=as.numeric(`Lower bound`)]
+  CI_plot_TE1[,`Upper bound`:=as.numeric(`Upper bound`)]
+  CI_plot_TE1[,Model:= "TE1"]
+}
+
+if (is.null(simulation_results_list$results_TE_2_Boot_CI)==0) {
+  
+  
+  CI_plot_TE2<-(simulation_results_list$results_TE_2_Boot_CI[[case]]$confidence.intervals)
+  CI_plot_TE2<-cbind(Parameters=rownames(CI_plot_TE2), CI_plot_TE2)
+  CI_plot_TE2 <- as.data.table(CI_plot_TE2)
+  CI_plot_TE2[,Estimates:=as.numeric(Estimates)]
+  CI_plot_TE2[,`Lower bound`:=as.numeric(`Lower bound`)]
+  CI_plot_TE2[,`Upper bound`:=as.numeric(`Upper bound`)]
+  CI_plot_TE2[,Model:= "TE2"]
+}
+
+if (is.null(simulation_results_list$results_TE_4_Boot_CI)==0) {
+  
+  
+  CI_plot_TE4<-(simulation_results_list$results_TE_4_Boot_CI[[case]]$confidence.intervals)
+  CI_plot_TE4<-cbind(Parameters=rownames(CI_plot_TE4), CI_plot_TE4)
+  CI_plot_TE4 <- as.data.table(CI_plot_TE4)
+  CI_plot_TE4[,Estimates:=as.numeric(Estimates)]
+  CI_plot_TE4[,`Lower bound`:=as.numeric(`Lower bound`)]
+  CI_plot_TE4[,`Upper bound`:=as.numeric(`Upper bound`)]
+  CI_plot_TE4[,Model:= "TE4"]
+}
+
+CI_plot_all <- rbind(CI_plot_TE1, CI_plot_TE2, CI_plot_TE4)
+
+# Make the graph with the 95% confidence interval
+if (is.null(CI_plot_all)!=1) {
+  
+  figure <- ggplot(CI_plot_all, aes(x=Parameters, 
+                                    y=Estimates #, group=1
+                                    #ymin=CI_plot$`Lower bound`, ymax=CI_plot$`Upper bound`
+  )) +
+    geom_errorbar(width=.1, aes(ymin=CI_plot_all$`Lower bound`, ymax=CI_plot_all$`Upper bound`)) +
+    geom_point(shape=21, size=3, fill="white")  +  coord_flip() +  
+    facet_grid( Model~., scales = "free") +
+    ggtitle(paste0("Bootstrap CI for TE models; Case ",case," ; Fit method: ", fit_method,
+                   ";\nRestrictions: a_00=",simulation_results_list$user_restrictions[1],  
+                   ", a_01=",simulation_results_list$user_restrictions[2],
+                   ", a_10=",simulation_results_list$user_restrictions[3],
+                   ", a_11=",simulation_results_list$user_restrictions[4]
+    ))
+  ggsave(figure, file= paste0("Bootstrap CI for TE models; Case ",case," ; Fit method= ", fit_method,
+                              "; Restrictions a_00=",simulation_results_list$user_restrictions[1],  
+                              ", a_01=",simulation_results_list$user_restrictions[2],
+                              ", a_10=",simulation_results_list$user_restrictions[3],
+                              ", a_11=",simulation_results_list$user_restrictions[4], ".pdf"  ), width=7,height=8)
+  figure
+}
+
+
+```
+
+
