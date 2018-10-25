@@ -1,7 +1,7 @@
 
 # True and Error Models
 
-## R program to analyze True and Error Models
+## R program to analyze True and Error Models - TEMAP2.R
 These instructions will help you run the program presented in Birnbaum, M. H., & Quispe-Torreblanca, E. G. (2018). 
 TEMAP2: Computer program to analyze True and Error Models. Published in [Judgment and Decision Making](
 http://www.sjdm.org/journal/18/18507/jdm18507.pdf)
@@ -28,7 +28,7 @@ The section beginning with line 2330 is used to create the output of the program
 
 Sample results in the paper are based on the setup in Example.xlsx, for the first case (the data in Table 2), except using 10000 instead of 100.
  
-## True and Error Models for testing transitivity violations
+## True and Error Models for testing transitivity violations - TE_analysis.R
 
 These instructions will help you run the program presented in Birnbaum, M. H., Navarro-Martinez, D., Ungemach, C., Stewart, N. & Quispe-Torreblanca, E. G. (2016). Risky decision making: Testing for violations of transitivity predicted by an editing mechanism. 
 Published in [Judgment and Decision Making](
